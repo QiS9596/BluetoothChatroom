@@ -121,6 +121,6 @@ public class bluetoothListShow extends AppCompatActivity implements AdapterView.
 
     @Override
     public void onClick(View v) {
-        //TODO
+        OpenAndFindBluetoothDevice();
     }
 }

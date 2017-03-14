@@ -1,6 +1,8 @@
 package com.example.rolo.bluetoothchatroom;
 
 
+import android.os.Handler;
+
 /**
  * used to pass tasks between UserInterface and background service thread
  * Created by rolo on 2017/3/14.
@@ -15,5 +17,12 @@ public class Task {
 
     private int currentTaskID;
     public Object[] parameters;
+    public Task(Handler handler, int currentTaskID, Object[] parameters){
+        this.currentTaskID = currentTaskID;
+        this.parameters = parameters;
+    }
 
+    public int getCurrentTaskID(){
+        return this.currentTaskID;
+    }
 }
