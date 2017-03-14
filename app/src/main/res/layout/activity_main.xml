@@ -10,12 +10,21 @@
         android:paddingTop="@dimen/activity_vertical_margin"
         android:paddingBottom="@dimen/activity_vertical_margin"
         tools:context="com.example.rolo.bluetoothchatroom.MainActivity">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_alignParentTop="true"
+            android:layout_above="@+id/linearLayout">
+    <Button android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_above="@+id/chatView"
+            android:id="@+id/ButtonBluetooth"
+            android:text="scan bluetooth devices"/>
     <ListView android:layout_height="wrap_content"
-    android:layout_width="match_parent"
-    android:layout_above="@+id/linearLayout"
-    android:layout_alignParentLeft="true"
-    android:layout_alignParentTop="true"/>
-
+              android:layout_width="match_parent"
+              android:layout_alignParentLeft="true"
+              android:layout_alignParentTop="false"
+              android:id="@+id/chatView"/>
+    </LinearLayout>
 
     <LinearLayout
             android:orientation="horizontal"

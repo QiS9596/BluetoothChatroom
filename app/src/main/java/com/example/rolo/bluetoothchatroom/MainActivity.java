@@ -5,8 +5,13 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
@@ -18,12 +23,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        initFullTextViewTest();
         if(!testBluetoothAvailable())
             finish();
         activateBluetooth();
         setDiscoverable();
     }
+
+    private void initFullTextViewTest(){
+        ListView messageTextView = (ListView)findViewById(R.id.chatView);
+        ArrayList<String> ListViewDataSource = new ArrayList<>();
+        for(int index = 0; index < 30; index++){
+            ListViewDataSource.add("data source : " + index);
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.defaultlistviewlayout,ListViewDataSource);
+        messageTextView.setAdapter(adapter);
+    }
+
     //ask for default bluetooth adapter, if failed return false which result in the termination of app
     private boolean testBluetoothAvailable(){
         myBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
