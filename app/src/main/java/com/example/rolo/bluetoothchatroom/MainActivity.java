@@ -1,9 +1,12 @@
 package com.example.rolo.bluetoothchatroom;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.*;
 
 import java.util.ArrayList;
@@ -13,6 +16,8 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter myBluetoothAdapter;
     //intent request codes
     private static final int REQUEST_ENABLE_BLUETOOTH = 2;
+    //scan bluetooth device code
+    private static final int REQUEST_SCAN_BT_DEVICE = 1;
     //listview that displays chat infomation
     private ListView messageTextView;
     private ArrayList<String> chatHistoryData;//arraylist that holds the chat history data
@@ -20,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
     private Button sendButton;//button to trigger send message
     private Button askScanMenuButton;//button that invoke the menu to scan bluetooth devices
     private BaseAdapter adapter;
+    private Handler handler;
+    private BluetoothDevice pairedDevice;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
 
         //initialize messageTextView with adapter
         messageTextView.setAdapter(adapter);
-
         //open bluetooth device
         //try to get bluetooth adapter
         if(!getBluetoothAdapter())
@@ -52,6 +58,29 @@ public class MainActivity extends AppCompatActivity {
         }
         activateBluetooth();
 
+        //attach send button action
+        sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String currentMessage = inputField.getText().toString().trim();
+                if(currentMessage.length() <= 0)
+                    return;
+                chatHistoryData.add(myBluetoothAdapter.getName() + " : " + currentMessage);
+                //update data locally
+                adapter.notifyDataSetChanged();
+                //send message to background service to complete remote message deliver
+                // TODO
+                //TaskService.newTask(new Task(handler,Task.SEND_MSG,new Object[]{currentMessage}));
+                inputField.setText("");
+            }
+        });
+
+    }
+
+    //onclick method that start scan bluetooth device menu
+    public void askScanMenuButtonOnClick(View v){
+        Toast.makeText(this, "Hello,world", Toast.LENGTH_SHORT).show();
+        startActivityForResult(new Intent(this, bluetoothListShow.class),REQUEST_SCAN_BT_DEVICE);
     }
 
 
@@ -115,9 +144,18 @@ public class MainActivity extends AppCompatActivity {
             case REQUEST_ENABLE_BLUETOOTH:
                 if(resultCode == RESULT_OK)
                 {
-                    //TO-DO
+                    //TODO
                     //start multi-thread bluetooth service
                     //startServiceAsServer
+                }
+                break;
+            case REQUEST_SCAN_BT_DEVICE:
+                if(resultCode == RESULT_OK){
+                    pairedDevice = data.getParcelableExtra("DEVICE");
+                    if(pairedDevice == null)
+                        return;
+                    //commit start connect device task, as a clint
+                    //TaskService.newTask(new Task(handler,Task.CONNECT_THREAD, new Object[]{}));
                 }
                 break;
             default:

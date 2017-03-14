@@ -18,7 +18,8 @@
             android:layout_alignParentTop="true"
             android:layout_above="@+id/chatView"
             android:id="@+id/ButtonBluetooth"
-            android:text="scan bluetooth devices"/>
+            android:text="scan bluetooth devices"
+            android:onClick="askScanMenuButtonOnClick"/>
     <ListView android:layout_height="wrap_content"
               android:layout_width="match_parent"
               android:layout_alignParentLeft="true"
