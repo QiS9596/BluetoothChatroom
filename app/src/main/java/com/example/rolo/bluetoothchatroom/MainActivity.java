@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -48,6 +49,25 @@ public class MainActivity extends AppCompatActivity {
 
         //initialize messageTextView with adapter
         messageTextView.setAdapter(adapter);
+        handler = new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                switch(msg.what){
+                    case Task.SEND_MSG:
+                        Toast.makeText(MainActivity.this,msg.obj.toString(),Toast.LENGTH_LONG).show();
+                        break;
+                    case Task.RECEIVE_MSG:
+                        chatHistoryData.add(msg.obj.toString());
+                        adapter.notifyDataSetChanged();
+                        break;
+                    case Task.GET_REMOTE_STATE:
+                        setTitle(msg.obj.toString());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
         //open bluetooth device
         //try to get bluetooth adapter
         if(!getBluetoothAdapter())
@@ -69,8 +89,8 @@ public class MainActivity extends AppCompatActivity {
                 //update data locally
                 adapter.notifyDataSetChanged();
                 //send message to background service to complete remote message deliver
-                // TODO
-                //TaskService.newTask(new Task(handler,Task.SEND_MSG,new Object[]{currentMessage}));
+
+                TaskService.newTask(new Task(handler,Task.SEND_MSG,new Object[]{currentMessage}));
                 inputField.setText("");
             }
         });
@@ -144,9 +164,7 @@ public class MainActivity extends AppCompatActivity {
             case REQUEST_ENABLE_BLUETOOTH:
                 if(resultCode == RESULT_OK)
                 {
-                    //TODO
-                    //start multi-thread bluetooth service
-                    //startServiceAsServer
+                    startServiceAsServer();
                 }
                 break;
             case REQUEST_SCAN_BT_DEVICE:
@@ -155,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
                     if(pairedDevice == null)
                         return;
                     //commit start connect device task, as a clint
-                    //TaskService.newTask(new Task(handler,Task.CONNECT_THREAD, new Object[]{}));
+                    TaskService.newTask(new Task(handler,Task.CONNECT_THREAD, new Object[]{}));
                 }
                 break;
             default:

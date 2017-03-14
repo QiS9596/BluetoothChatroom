@@ -11,8 +11,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 
-import java.io.IOError;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -151,7 +150,7 @@ public class TaskService extends Service {
                     break;
                 }
                 if(bluetoothSocket != null){
-                    //TODO manageConnectedSocket(socket);
+                    manageConnectedSocket(bluetoothSocket);
                     try{
                         bluetoothSocket.close();
                     }catch(IOException e){
@@ -161,5 +160,69 @@ public class TaskService extends Service {
                 }
             }
         }
+
+
     }
+
+    private ConnectedThread connectedThread;
+    private void manageConnectedSocket(BluetoothSocket socket){
+        connectedThread = new ConnectedThread(socket);
+        connectedThread.start();
+    }
+
+    //thread that used to manage connected device
+    private class ConnectedThread extends Thread{
+        private final BluetoothSocket bluetoothSocket;
+        private final InputStream inputStream;
+
+        public OutputStream getOutputStream() {
+            return outputStream;
+        }
+
+        private final OutputStream outputStream;
+        private BufferedWriter bufferedWriter;
+        public ConnectedThread(BluetoothSocket bluetoothSocket){
+            this.bluetoothSocket = bluetoothSocket;
+            InputStream bfr_input = null;
+            OutputStream bfr_opt = null;
+            try{
+                bfr_input = bluetoothSocket.getInputStream();
+                bfr_opt = bluetoothSocket.getOutputStream();
+            }catch(IOException e){}
+            inputStream = bfr_input;
+            outputStream = bfr_opt;
+            bufferedWriter = new BufferedWriter(new PrintWriter(outputStream));
+        }
+
+        @Override
+        public void run() {
+            Message handlerMsg;
+            String buffer;
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+            while(true){
+                try{
+                    buffer = bufferedReader.readLine();
+                    if(buffer == null)
+                        continue;
+                    if (myHandler == null)
+                        return;
+                    buffer = bluetoothSocket.getRemoteDevice().getName() + " : " + buffer;
+                    handlerMsg = myHandler.obtainMessage();
+                    handlerMsg.what = Task.RECEIVE_MSG;
+                    handlerMsg.obj = buffer;
+                    myHandler.sendMessage(handlerMsg);
+                }catch (IOException e){
+                    try{
+                        bluetoothSocket.close();
+                    }catch(IOException e1){
+                        connectedThread = null;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    
 }
