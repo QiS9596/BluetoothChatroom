@@ -1,10 +1,13 @@
 package com.example.rolo.bluetoothchatroom;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
+
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     //local bluetooth adapter
@@ -34,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     //set the current device to discoverable
     private void activateBluetooth(){
         if(!myBluetoothAdapter.isEnabled()){
+
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
         }
@@ -48,6 +52,6 @@ public class MainActivity extends AppCompatActivity {
     }
     //start device discover with the BluetoothAdapter
     private void scanBluetoothDevice(){
-
+//        Set<BluetoothDevice>;
     }
 }
