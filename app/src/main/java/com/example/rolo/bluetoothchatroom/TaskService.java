@@ -224,5 +224,9 @@ public class TaskService extends Service {
         }
     }
 
-    
+    private class ConnectThread extends Thread{
+        //TODO
+//        private final BluetoothSocket bluetoothSocket;
+//        private final BluetoothDevice
+    }
 }
