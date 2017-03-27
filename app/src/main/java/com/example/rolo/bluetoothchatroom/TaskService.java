@@ -64,6 +64,7 @@ public class TaskService extends Service {
     public static void newTask(Task task){
         taskQueue.add(task);
     }
+    //synchronized(taskQueue){ taskQueue.add(task); }
 
     private class TaskThread extends Thread{
         private Boolean isRun = true;
@@ -114,6 +115,13 @@ public class TaskService extends Service {
                     connectThread.start();
                     serving = false;
                     break;
+                case Task.SEND_MSG:
+                    boolean sucess = false;
+                    /* TODO
+                    commThread
+
+                    * */
+                    connectedThread.write((String) task.parameters[0]);
             }
         }
     }
@@ -126,7 +134,7 @@ public class TaskService extends Service {
             BluetoothServerSocket bluetoothServerSocket = null;
             try{
                 bluetoothServerSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("BluetoothChatRoomR",
-                        UUID.fromString("BluetoothChatRoomR"));//UUID? question
+                        UUID.fromString("BluetoothChatRoomR"));//UUID? question TODO
             }catch(IOException e){}
             serverSocket = bluetoothServerSocket;
         }
@@ -196,6 +204,7 @@ public class TaskService extends Service {
 
         @Override
         public void run() {
+            write(bluetoothAdapter.getName());
             Message handlerMsg;
             String buffer;
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -222,12 +231,21 @@ public class TaskService extends Service {
                 }
             }
         }
+
+        public boolean write(String msg){
+            if(msg == null) return false;
+            try{
+                bufferedWriter.write(msg + "\n");
+                bufferedWriter.flush();
+
+            }catch (IOException e){
+                return false;
+            }
+            return true;
+        }
     }
 
     private class ConnectThread extends Thread{
-        //TODO
-//        private final BluetoothSocket bluetoothSocket;
-//        private final BluetoothDevice
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
 

@@ -16,8 +16,10 @@ public class Task {
     public static final int RECEIVE_MSG = 5;
 
     private int currentTaskID;
+    private Handler handler;
     public Object[] parameters;
     public Task(Handler handler, int currentTaskID, Object[] parameters){
+        this.handler = handler;
         this.currentTaskID = currentTaskID;
         this.parameters = parameters;
     }
