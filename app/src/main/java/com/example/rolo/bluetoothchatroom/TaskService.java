@@ -68,7 +68,7 @@ public class TaskService extends Service {
     private class TaskThread extends Thread{
         private Boolean isRun = true;
         private int count = 0;
-
+        private ConnectThread connectThread;
         //Terminates the current Thread
         public void cancel(){
             isRun = false;
@@ -110,8 +110,8 @@ public class TaskService extends Service {
                     if(task.parameters == null)
                         break;
                     BluetoothDevice pair = (BluetoothDevice)task.parameters[0];
-                    //TODO connectThread = new ConnectThread();
-                    //TODO connectThread.start();
+                    connectThread = new ConnectThread(pair);
+                    connectThread.start();
                     serving = false;
                     break;
             }
@@ -228,5 +228,36 @@ public class TaskService extends Service {
         //TODO
 //        private final BluetoothSocket bluetoothSocket;
 //        private final BluetoothDevice
+        private final BluetoothSocket mmSocket;
+        private final BluetoothDevice mmDevice;
+
+        public ConnectThread(BluetoothDevice device){
+            BluetoothSocket temp = null;
+            mmDevice = device;
+            try{
+                temp = device.createRfcommSocketToServiceRecord(UUID.fromString("BluetoothChatRoomR"));
+            }catch(IOException e){}
+            mmSocket = temp;
+        }
+
+        public void run(){
+            bluetoothAdapter.cancelDiscovery();
+
+            try{
+                mmSocket.connect();
+            }catch(IOException e){
+                try{
+                    mmSocket.connect();
+                }catch(IOException e1){}
+            }
+            manageConnectedSocket(mmSocket);
+        }
+
+        public void cancel(){
+            try{
+                mmSocket.close();
+
+            }catch(IOException e){}
+        }
     }
 }

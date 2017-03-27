@@ -134,15 +134,15 @@ public class MainActivity extends AppCompatActivity {
         }else{
             //the bluetooth adapter is already enabled
             //then we can straightly start multi-thread bluetooth service
-            //TO-DO
-            //startServiceAsServer();
+
+            startServiceAsServer();
         }
     }
     private void startServiceAsServer(){
-        //TaskService.start(this, handler);
+        TaskService.start(this, handler);
 
         //give a new task to background, the taskservice will pop out tasks from task array and accomplish them
-        //TaskService.newTask(new Task(handler,Task.TASK_START_ACCEPT,null));
+        TaskService.newTask(new Task(handler,Task.START_ACCEPT,null));
     }
     //set current device to discoverable
     private void setDiscoverable(){
