@@ -12,7 +12,6 @@ import android.os.IBinder;
 import android.os.Message;
 
 import java.io.*;
-import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -42,7 +41,33 @@ public class TaskService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-    private static Handler myHandler;
+    private static Handler handler_ActivityMain;
+
+    private Handler handler_TaskService = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            switch(msg.what){
+                case Task.GET_REMOTE_STATE:
+                    Message activityMsg = handler_ActivityMain.obtainMessage();
+                    activityMsg.what = msg.what;
+                    if(acceptThread != null && acceptThread.isAlive())
+                        activityMsg.obj = "accepting";
+                    else if(connectedThread!=null && connectedThread.isAlive())
+                        activityMsg.obj = "Device ";//+connectedThread.getRomoteName()
+                    else if(connectThread != null && connectThread.isAlive())
+                        activityMsg.obj = "connecting "; //connectingThread.getDevice().getName()
+                    else{
+                        activityMsg.obj = "Restart accepting process";
+                        acceptThread = new AcceptThread();
+                        acceptThread.start();
+                        serving = true;
+                    }
+                    handler_ActivityMain.sendMessage(activityMsg);
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
 
     /**
      * called when start service from outer component
@@ -50,7 +75,7 @@ public class TaskService extends Service {
      * @param handler handler to update User Interface
      */
     public static void start(Context c, Handler handler){
-        myHandler = handler;
+        handler_ActivityMain = handler;
         //start service explicitly
         Intent intent = new Intent(c,TaskService.class);
         c.startService(intent);
@@ -96,10 +121,10 @@ public class TaskService extends Service {
                     }catch(InterruptedException e){}
                     if(count >= 50){
                         count = 0;
-                        Message handlerMsg = myHandler.obtainMessage();
+                        Message handlerMsg = handler_TaskService.obtainMessage();
                         handlerMsg.what = Task.GET_REMOTE_STATE;
 
-                        myHandler.sendMessage(handlerMsg);
+                        handler_TaskService.sendMessage(handlerMsg);
                     }
                 }
             }
@@ -237,13 +262,13 @@ public class TaskService extends Service {
                     buffer = bufferedReader.readLine();
                     if(buffer == null)
                         continue;
-                    if (myHandler == null)
+                    if (handler_ActivityMain == null)
                         return;
                     buffer = bluetoothSocket.getRemoteDevice().getName() + " : " + buffer;
-                    handlerMsg = myHandler.obtainMessage();
+                    handlerMsg = handler_ActivityMain.obtainMessage();
                     handlerMsg.what = Task.RECEIVE_MSG;
                     handlerMsg.obj = buffer;
-                    myHandler.sendMessage(handlerMsg);
+                    handler_ActivityMain.sendMessage(handlerMsg);
                 }catch (IOException e){
                     try{
                         bluetoothSocket.close();
@@ -266,6 +291,16 @@ public class TaskService extends Service {
             }
             return true;
         }
+
+        public String getRemoteName(){
+            return bluetoothSocket.getRemoteDevice().getName();
+        }
+        public void cancel(){
+            try{
+                bluetoothSocket.close();
+            }catch(IOException e){}
+            connectedThread = null;
+        }
     }
 
     private class ConnectThread extends Thread{
@@ -281,6 +316,10 @@ public class TaskService extends Service {
             mmSocket = temp;
         }
 
+        public BluetoothDevice getDevice(){
+            return mmDevice;
+        }
+
         public void run(){
             bluetoothAdapter.cancelDiscovery();
 
@@ -288,7 +327,7 @@ public class TaskService extends Service {
                 mmSocket.connect();
             }catch(IOException e){
                 try{
-                    mmSocket.connect();
+                    mmSocket.close();
                 }catch(IOException e1){}
             }
             manageConnectedSocket(mmSocket);
