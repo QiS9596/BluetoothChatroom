@@ -17,8 +17,10 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 public class TaskService extends Service {
+    private static final String UUID_STRING = "8ce255c0-200a-11e0-ac64-0800200c9a66";
     @Override
     public void onCreate() {
+
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if(bluetoothAdapter == null){
             return;
@@ -35,10 +37,10 @@ public class TaskService extends Service {
     private TaskThread taskThread;
     private BluetoothAdapter bluetoothAdapter;
     private AcceptThread acceptThread;
+    private ConnectThread connectThread;
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+        return null;
     }
     private static Handler myHandler;
 
@@ -62,14 +64,16 @@ public class TaskService extends Service {
 
     //commit task to taskservice
     public static void newTask(Task task){
+        synchronized (taskQueue){
         taskQueue.add(task);
+        }
     }
     //synchronized(taskQueue){ taskQueue.add(task); }
 
     private class TaskThread extends Thread{
         private Boolean isRun = true;
         private int count = 0;
-        private ConnectThread connectThread;
+
         //Terminates the current Thread
         public void cancel(){
             isRun = false;
@@ -77,6 +81,7 @@ public class TaskService extends Service {
 
         @Override
         public void run() {
+
             Task task;
             while (isRun){
                 if(taskQueue.size() > 0){
@@ -93,54 +98,62 @@ public class TaskService extends Service {
                         count = 0;
                         Message handlerMsg = myHandler.obtainMessage();
                         handlerMsg.what = Task.GET_REMOTE_STATE;
+
                         myHandler.sendMessage(handlerMsg);
                     }
                 }
             }
         }
 
-        private void accomplishTask(Task task){
-            switch(task.getCurrentTaskID()){
-                case Task.START_ACCEPT:
-                    //accept client as a server
-                    acceptThread = new AcceptThread();
-                    acceptThread.start();
-                    serving = true;
+    }
+
+    private void accomplishTask(Task task){
+        switch(task.getCurrentTaskID()){
+            case Task.START_ACCEPT:
+                //accept client as a server
+                acceptThread = new AcceptThread();
+                acceptThread.start();
+                serving = true;
+                break;
+            case Task.CONNECT_THREAD:
+                if(task.parameters == null)
                     break;
-                case Task.CONNECT_THREAD:
-                    if(task.parameters == null)
-                        break;
-                    BluetoothDevice pair = (BluetoothDevice)task.parameters[0];
-                    connectThread = new ConnectThread(pair);
-                    connectThread.start();
-                    serving = false;
-                    break;
-                case Task.SEND_MSG:
-                    boolean sucess = false;
+                BluetoothDevice pair = (BluetoothDevice)task.parameters[0];
+                connectThread = new ConnectThread(pair);
+                connectThread.start();
+                serving = false;
+                break;
+            case Task.SEND_MSG:
+                boolean sucess = false;
                     /* TODO
                     commThread
 
                     * */
-                    connectedThread.write((String) task.parameters[0]);
-            }
+                connectedThread.write((String) task.parameters[0]);
+                break;
+        }
+        synchronized (taskQueue){
+            taskQueue.remove(task);
         }
     }
 
     private class AcceptThread extends Thread{
-        private final BluetoothServerSocket serverSocket;
+        private BluetoothServerSocket serverSocket;
         private boolean isRun = true;
 
         public AcceptThread() {
+
             BluetoothServerSocket bluetoothServerSocket = null;
             try{
                 bluetoothServerSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("BluetoothChatRoomR",
-                        UUID.fromString("BluetoothChatRoomR"));//UUID? question TODO
+                        UUID.fromString(UUID_STRING));//UUID? question TODO
             }catch(IOException e){}
             serverSocket = bluetoothServerSocket;
         }
 
         @Override
         public void run() {
+
             BluetoothSocket bluetoothSocket = null;
             while(isRun){
                 try{
@@ -169,7 +182,17 @@ public class TaskService extends Service {
             }
         }
 
+        public void cancel(){
+            try{
+                serving = false;
+                serverSocket.close();
+                acceptThread = null;
+                if(connectThread != null && connectThread.isAlive())
+                    connectThread.cancel();
+            }catch(IOException e){
 
+            }
+        }
     }
 
     private ConnectedThread connectedThread;
@@ -253,7 +276,7 @@ public class TaskService extends Service {
             BluetoothSocket temp = null;
             mmDevice = device;
             try{
-                temp = device.createRfcommSocketToServiceRecord(UUID.fromString("BluetoothChatRoomR"));
+                temp = device.createRfcommSocketToServiceRecord(UUID.fromString(UUID_STRING));
             }catch(IOException e){}
             mmSocket = temp;
         }

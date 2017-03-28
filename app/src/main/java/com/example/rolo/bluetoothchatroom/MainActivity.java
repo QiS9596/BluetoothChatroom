@@ -61,7 +61,8 @@ public class MainActivity extends AppCompatActivity {
                         adapter.notifyDataSetChanged();
                         break;
                     case Task.GET_REMOTE_STATE:
-                        setTitle(msg.obj.toString());
+                        //setTitle(msg.obj.toString());
+                        //Toast.makeText(MainActivity.this,msg.obj.toString(),Toast.LENGTH_LONG).show();
                         break;
                     default:
                         break;
