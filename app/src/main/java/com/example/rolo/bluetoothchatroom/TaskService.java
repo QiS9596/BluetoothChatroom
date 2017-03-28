@@ -10,12 +10,14 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.util.Log;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.UUID;
 
 public class TaskService extends Service {
+    public static final String MY_TAG = "RoloSong";
     private static final String UUID_STRING = "8ce255c0-200a-11e0-ac64-0800200c9a66";
     @Override
     public void onCreate() {
@@ -141,6 +143,7 @@ public class TaskService extends Service {
                 serving = true;
                 break;
             case Task.CONNECT_THREAD:
+
                 if(task.parameters == null)
                     break;
                 BluetoothDevice pair = (BluetoothDevice)task.parameters[0];
@@ -222,6 +225,7 @@ public class TaskService extends Service {
 
     private ConnectedThread connectedThread;
     private void manageConnectedSocket(BluetoothSocket socket){
+        Log.d(MY_TAG,"manage connect socket" + socket.getRemoteDevice().getName());
         connectedThread = new ConnectedThread(socket);
         connectedThread.start();
     }
@@ -321,11 +325,14 @@ public class TaskService extends Service {
         }
 
         public void run(){
+            Log.d(MY_TAG,"connectthread running");
             bluetoothAdapter.cancelDiscovery();
 
             try{
+                Log.d(MY_TAG,"thy connect" + mmDevice.getName());
                 mmSocket.connect();
             }catch(IOException e){
+                Log.d(MY_TAG, "connection failed");
                 try{
                     mmSocket.close();
                 }catch(IOException e1){}

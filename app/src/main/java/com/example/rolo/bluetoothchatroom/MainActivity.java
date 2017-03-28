@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
@@ -95,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
                 inputField.setText("");
             }
         });
-
     }
 
     //onclick method that start scan bluetooth device menu
@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                     if(pairedDevice == null)
                         return;
                     //commit start connect device task, as a clint
-                    TaskService.newTask(new Task(handler,Task.CONNECT_THREAD, new Object[]{}));
+                    TaskService.newTask(new Task(handler,Task.CONNECT_THREAD, new Object[]{pairedDevice}));
                 }
                 break;
             default:
