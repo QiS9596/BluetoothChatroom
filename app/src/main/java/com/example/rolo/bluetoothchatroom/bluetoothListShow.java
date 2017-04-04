@@ -54,6 +54,12 @@ public class bluetoothListShow extends AppCompatActivity implements AdapterView.
         registerReceiver(receiver,filter);
     }
 
+    @Override
+    protected void onStop(){
+        unregisterReceiver(receiver);
+        super.onStop();
+    }
+
     private void initializeReceiver(){
         receiver = new BroadcastReceiver() {
             @Override

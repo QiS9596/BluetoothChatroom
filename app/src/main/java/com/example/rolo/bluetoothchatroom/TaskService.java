@@ -184,9 +184,13 @@ public class TaskService extends Service {
 
             BluetoothSocket bluetoothSocket = null;
             while(isRun){
+                Log.d(MY_TAG,"enter accepting thread");
                 try{
+                    Log.d(MY_TAG, "trying Accept");
                     bluetoothSocket = serverSocket.accept();
+                    Log.d(MY_TAG,"ending accept");
                 }catch(IOException e){
+                    Log.d(MY_TAG, "accept Thread error occured");
                     if(isRun){
                         try{
                             serverSocket.close();
@@ -198,7 +202,9 @@ public class TaskService extends Service {
                     }
                     break;
                 }
+                Log.d(MY_TAG, "trying Acceptthread phase 2");
                 if(bluetoothSocket != null){
+                    Log.d(MY_TAG,"receive socket as receiver");
                     manageConnectedSocket(bluetoothSocket);
                     try{
                         bluetoothSocket.close();
@@ -207,6 +213,7 @@ public class TaskService extends Service {
                     acceptThread = null;
                     isRun = false;
                 }
+                Log.d(MY_TAG, "trying Acceptthread phase 3");
             }
         }
 
@@ -242,6 +249,7 @@ public class TaskService extends Service {
         private final OutputStream outputStream;
         private BufferedWriter bufferedWriter;
         public ConnectedThread(BluetoothSocket bluetoothSocket){
+            Log.d(MY_TAG,"connected thread build successfull" + bluetoothSocket.getRemoteDevice().getName());
             this.bluetoothSocket = bluetoothSocket;
             InputStream bfr_input = null;
             OutputStream bfr_opt = null;
@@ -312,6 +320,10 @@ public class TaskService extends Service {
         private final BluetoothDevice mmDevice;
 
         public ConnectThread(BluetoothDevice device){
+            if(acceptThread != null && acceptThread.isAlive())
+                acceptThread.cancel();
+            if(connectedThread != null && connectedThread.isAlive())
+                connectedThread.cancel();
             BluetoothSocket temp = null;
             mmDevice = device;
             try{
